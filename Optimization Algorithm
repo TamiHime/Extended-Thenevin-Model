@@ -1,0 +1,133 @@
+% Load data
+load readonly/pulseData.mat;  % load data to use for this project
+load readonly/pulseModel.mat; % load SOC/OCV relationships, capacity
+
+% Set deltaT globally
+deltaT = 1;  % Define deltaT as 1 second (sampling period)
+
+T = 25;  % Test temperature
+Q = getParamESC('QParam', T, model);  % Total capacity of the cell
+
+tk = pulseData.time;    % Testing time
+ik = pulseData.current;  % Testing current
+vk = pulseData.voltage;  % Testing voltage
+
+% Define the RC circuit model function using original unit conversions
+function vest = rc_model_function(params, ik, vk, deltaT, Q, model)
+    R0 = params(1) / 1000;  % Convert milliohms to ohms
+    R = params(2:2:end) / 1000;  % Convert resistances to ohms
+    C = params(3:2:end) * 1000;  % Convert capacitances from kF to F
+
+    % Compute RC decay factors
+    RCfact = exp(-deltaT ./ (R .* C));  % Element-wise division for decay factors
+    
+    % Initialize dynamic states
+    iRk = zeros(length(RCfact), 1);  % Initial resistor currents
+    vCk = zeros(length(ik), 1);  % Initialize capacitor voltage array
+
+    % Simulate the dynamic states of the model
+    for k = 2:length(ik)
+        iRk = RCfact(:) .* iRk + (1 - RCfact(:)) .* ik(k-1);  % Update resistor current
+        vCk(k) = R' * iRk;  % Compute capacitor voltage as a dot product
+    end
+
+    % Simulate SOC state and calculate the total voltage estimate
+    z0 = SOCfromOCVtemp(vk(1), 25, model);  % Initial SOC based on first voltage
+    zk = z0 - cumsum([0; ik(1:end-1)]) * deltaT / (Q * 3600);  % SOC estimation
+
+    % Compute the final estimated voltage
+    vest = OCVfromSOCtemp(zk, 25, model) - vCk - ik .* R0;  % Total voltage estimate
+end
+
+% Define the objective function for minimization
+function error = objective_function(params, ik, vk, deltaT, Q, model)
+    try
+        vest = rc_model_function(params, ik, vk, deltaT, Q, model);
+    catch
+        % Return a large error if the model fails (invalid parameters)
+        error = Inf;
+        return;
+    end
+
+    % Compute the error (Sum of squared errors)
+    error = sum((vk - vest).^2);
+end
+
+% Bounds enforcement function
+function params = enforce_bounds(params, lb, ub)
+    params = max(min(params, ub), lb);  % Clip the values to lie within the bounds
+end
+
+% Function to run optimization loop until RMS error is below 5 mV
+function [fitted_params, rms_error] = run_optimization_loop(initial_guess, lb, ub, ik, vk, deltaT, Q, model)
+    max_iterations = 100;  % Max number of optimization attempts
+    rms_target = 5;  % Target RMS error in mV
+    iteration = 0;
+    options = optimset('Display', 'off');  % Disable iteration output
+
+    while iteration < max_iterations
+        % Perform optimization
+        fitted_params = fminsearch(@(params) objective_function(enforce_bounds(params, lb, ub), ik, vk, deltaT, Q, model), initial_guess, options);
+
+        % Unscale the optimized parameters back to their original units
+        fitted_params = [fitted_params(1), ...   % Milliohms
+                         fitted_params(2), ...   % Milliohms
+                         fitted_params(3), ...   % Kilofarads
+                         fitted_params(4), ...   % Milliohms
+                         fitted_params(5)];      % Kilofarads
+
+        % Compute the fitted voltage estimate using the fitted parameters
+        vest_fitted = rc_model_function(fitted_params, ik, vk, deltaT, Q, model);
+
+        % Calculate the RMS error in millivolts
+        rms_error = sqrt(mean((vk - vest_fitted).^2)) * 1000;  % RMS in millivolts
+        disp(['Iteration ', num2str(iteration + 1), ' - RMS error (mV): ', num2str(rms_error)]);
+
+        % Check if RMS error is below the target
+        if rms_error < rms_target
+            disp('RMS error is below 5 mV. Optimization successful!');
+            return;
+        else
+            disp('RMS error is above 5 mV. Retrying optimization...');
+            % Optionally adjust initial guess for next iteration (e.g., randomization)
+            initial_guess = initial_guess + randn(size(initial_guess)) * 0.1;  % Small random perturbation
+        end
+
+        iteration = iteration + 1;
+    end
+
+    disp('Max optimization attempts reached. Final RMS error: ');
+    disp(rms_error);
+end
+
+% Define initial guess and bounds for the parameters [R0, R1, C1, R2, C2]
+initial_guess = [9.295, 15.875, 17.830, 2, 10];  % Initial guess (milliohms for R, kF for C)
+
+% Lower and upper bounds for the parameters
+lb = [0, 0, 10, 0, 10];  % Lower bounds (milliohms and kF)
+ub = [100, 100, 1000, 100, 1000];  % Upper bounds (milliohms and kF)
+
+% Run the optimization loop
+[fitted_params, rms_error] = run_optimization_loop(initial_guess, lb, ub, ik, vk, deltaT, Q, model);
+
+% Display the fitted parameters in original units
+disp('Fitted Parameters (R in milliohms, C in kilofarads):');
+disp(fitted_params);
+
+% Plot the results
+vest_fitted = rc_model_function(fitted_params, ik, vk, deltaT, Q, model);
+
+figure;
+subplot(2, 1, 1);
+plot(tk / 60, vk, tk / 60, vest_fitted);
+title('Voltage Estimation Using Fitted RC Model');
+xlabel('Time (minutes)');
+ylabel('Voltage (V)');
+legend('Measured Voltage', 'Fitted Voltage');
+
+subplot(2, 1, 2);
+plot(tk / 60, 1000 * (vk - vest_fitted));
+title('Voltage Estimation Error');
+xlabel('Time (minutes)');
+ylabel('Voltage Error (mV)');
+grid on;
