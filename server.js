@@ -9,7 +9,7 @@ app.use(cors());
 // ✅ Define the API route correctly
 app.post("/api/optimize", (req, res) => {
   const { R0, R1, C1, R2, C2 } = req.body;
-  const command = `octave --silent --eval "optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2})"`;
+  const command = `octave --silent --eval "try; optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2}); catch; disp('Error: Execution Failed'); exit(1); end"`;
 
   exec(command, (error, stdout) => {
     if (error) return res.status(500).json({ error: "Octave execution failed" });
