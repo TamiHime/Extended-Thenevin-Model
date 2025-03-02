@@ -39,5 +39,9 @@ app.post("/api/optimize", (req, res) => {
 
 // ✅ Ensure the server is running on the correct PORT
 const PORT = process.env.PORT || 10000;
+app.get("/", (req, res) => {
+  res.send("✅ Server is running! Use POST /api/optimize");
+});
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
