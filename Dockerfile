@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y nodejs npm
 # Copy project files
 COPY . .
 COPY octave/optimize_RC.m /app/optimize_RC.m
+COPY octave/pulseData.mat /app/readonly/pulseData.mat
 
 # Install project dependencies
 RUN npm install
