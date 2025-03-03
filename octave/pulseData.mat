@@ -1,8 +1,29 @@
-% Define Example Data
-pulseData.time = [0, 1, 2, 3, 4, 5];  % Time in seconds
-pulseData.current = [0, 1, 2, 1, 0, -1];  % Current in Amps
-pulseData.voltage = [3.7, 3.6, 3.5, 3.6, 3.7, 3.8];  % Voltage in Volts
+# Created by Octave 9.4.0, Sun Mar 02 19:25:15 2025 GMT <unknown@DESKTOP-LORQQAS>
+# name: pulseData
+# type: scalar struct
+# ndims: 2
+ 1 1
+# length: 3
+# name: time
+# type: matrix
+# rows: 1
+# columns: 6
+ 0 1 2 3 4 5
 
-% Save the Data to pulseData.mat
-save("pulseData.mat", "pulseData");
+
+# name: current
+# type: matrix
+# rows: 1
+# columns: 6
+ 0 1 2 1 0 -1
+
+
+# name: voltage
+# type: matrix
+# rows: 1
+# columns: 6
+ 3.7000000000000002 3.6000000000000001 3.5 3.6000000000000001 3.7000000000000002 3.7999999999999998
+
+
+
 
