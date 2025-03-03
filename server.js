@@ -1,3 +1,14 @@
+const { exec } = require("child_process");
+
+// Log Octave Version
+exec("octave --version", (error, stdout) => {
+  if (error) {
+    console.error("Octave is NOT installed or cannot be accessed.");
+  } else {
+    console.log("Octave Version:", stdout);
+  }
+});
+
 const express = require("express");
 const { exec } = require("child_process");
 const cors = require("cors");
