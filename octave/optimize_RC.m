@@ -1,5 +1,5 @@
 function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
-    load readonly/pulseData.m;
+    load readonly/pulseData.mat;
     load readonly/pulseModel.mat;
 
     deltaT = 1;  
