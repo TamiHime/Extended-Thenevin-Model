@@ -29,7 +29,7 @@ app.post("/api/optimize", (req, res) => {
   const { R0, R1, C1, R2, C2 } = req.body;
 
   // ✅ Modify Command to Log Any Octave Execution Issues
-  const command = `octave --silent --eval "try; disp('Running optimize_RC'); optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2}); catch err; disp('Error: Execution Failed'); disp(err.message); exit(1); end"`;
+  const command = `octave --silent --path /app --eval "try; optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2}); catch err; disp('Error: Execution Failed'); disp(err.message); exit(1); end"`;
 
   exec(command, (error, stdout) => {
     console.log("🔹 Octave Command Output:", stdout); // Debug Output in Logs
