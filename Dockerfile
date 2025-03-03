@@ -1,5 +1,5 @@
 # Use an official Octave image as the base
-FROM octave/octave:latest
+FROM mtmiller/octave:latest
 
 # Set working directory
 WORKDIR /app
