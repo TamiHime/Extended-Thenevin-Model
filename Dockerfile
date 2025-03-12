@@ -1,24 +1,31 @@
 # Use an official Octave image as the base
 FROM mtmiller/octave:latest
 
+# Install Node.js (since Octave base image does not have it)
+RUN apt update && apt install -y nodejs npm
+
 # Set working directory
 WORKDIR /app
 
-# Copy all files, including optimize_RC.m
-COPY . .
-COPY octave/optimize_RC.m /app/optimize_RC.m
+# Create necessary directories
+RUN mkdir -p /app/readonly/
+
+# Copy only package.json first to leverage Docker cache
+COPY package*.json /app/
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application files
+COPY . /app
+
+# Move Octave files to the correct location
+COPY octave/optimize_RC.m /app/readonly/optimize_RC.m
 COPY octave/pulseData.mat /app/readonly/pulseData.mat
 COPY octave/pulseModel.mat /app/readonly/pulseModel.mat
 
-# Create the directory if it doesn’t exist and move optimize_RC.m
-RUN mkdir -p /app/readonly/ && cp optimize_RC.m /app/readonly/
-
-# Install dependencies if needed (example for Node.js)
-RUN npm install
-
-# Expose the required port
-EXPOSE 3001
+# Expose the correct port (10000)
+EXPOSE 10000
 
 # Start the server
 CMD ["node", "server.js"]
-
