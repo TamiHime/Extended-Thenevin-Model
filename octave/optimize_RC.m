@@ -1,14 +1,46 @@
 function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
-    load readonly/pulseData.mat;
-    load readonly/pulseModel.mat;
+    % 🔹 Debug: Print working directory & available files
+    disp("📂 Checking working directory...");
+    disp(pwd); % Prints the current directory
+    disp("🔍 Available files in readonly:");
+    disp(ls('readonly/')); % Lists files in readonly folder
 
+    % 🔹 Load Data Files
+    disp("🔍 Loading pulseData.mat...");
+    pulseDataVars = load('readonly/pulseData.mat');
+
+    disp("🔍 Loading pulseModel.mat...");
+    pulseModelVars = load('readonly/pulseModel.mat');
+    
+    % 🔹 Debug: Check available variables in pulseModel.mat
+    disp("📂 Variables in pulseModel.mat:");
+    disp(fieldnames(pulseModelVars));
+
+    % 🔹 Ensure model exists in pulseModel.mat
+    if isfield(pulseModelVars, 'model')
+        model = pulseModelVars.model;
+        disp("✅ Loaded 'model' from pulseModel.mat");
+    else
+        error("❌ 'model' is missing from pulseModel.mat!");
+    end
+
+    % 🔹 Set Constants
     deltaT = 1;  
     T = 25;  
-    Q = getParamESC('QParam', T, model);  
 
-    tk = pulseData.time;    
-    ik = pulseData.current;  
-    vk = pulseData.voltage;  
+    % 🔹 Debug: Check if model works with getParamESC
+    try
+        Q = getParamESC('QParam', T, model);  
+    catch err
+        disp("❌ Error in getParamESC:");
+        disp(err.message);
+        error("⚠️ 'model' is incorrectly defined or missing required fields.");
+    end
+
+    % Extract Data
+    tk = pulseDataVars.pulseData.time;    
+    ik = pulseDataVars.pulseData.current;  
+    vk = pulseDataVars.pulseData.voltage;  
 
     % Initialize parameters
     R = [R0_init, R1_init, R2_init] / 1000;
@@ -54,8 +86,11 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
         prev_error = error;
     end
 
+    % Optimize Outputs
     R_opt = round(R * 1000, 3, "significant");
     C_opt = round(C / 1000, 3, "significant");
 
+    % ✅ Print final results
+    printf("✅ Optimization Complete!\n");
     printf("R0: %.3f, R1: %.3f, C1: %.3f, R2: %.3f, C2: %.3f\n", R_opt(1), R_opt(2), C_opt(1), R_opt(3), C_opt(2));
 end
