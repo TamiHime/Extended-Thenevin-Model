@@ -6,16 +6,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Log Octave Version to Check if Installed
+// ✅ Log Octave Version to Verify Installation
 exec("octave --version", (error, stdout) => {
   if (error) {
-    console.error("❌ Octave is NOT installed or cannot be accessed.");
+    console.error("❌ Octave is NOT installed or inaccessible.");
   } else {
     console.log("✅ Octave Version:", stdout);
   }
 });
 
-// ✅ Test if Octave Can Execute a Simple Command
+// ✅ Test Octave Execution
 exec("octave --silent --eval \"disp('Octave is working!')\"", (error, stdout) => {
   if (error) {
     console.error("❌ Octave execution failed: ", error);
@@ -24,26 +24,55 @@ exec("octave --silent --eval \"disp('Octave is working!')\"", (error, stdout) =>
   }
 });
 
-// ✅ Define the API route correctly
+// ✅ Debug Route: Check Available Files in `/app/readonly/`
+app.get("/debug", (req, res) => {
+  exec("ls -l /app/readonly/", (error, stdout, stderr) => {
+    if (error) {
+      console.error("❌ Failed to list files:", stderr);
+      return res.status(500).json({ error: "Failed to list files", details: stderr });
+    }
+    console.log("📂 Available Files:\n", stdout);
+    res.json({ files: stdout.split("\n") });
+  });
+});
+
+// ✅ API Route for Optimizing RC Model
 app.post("/api/optimize", (req, res) => {
   const { R0, R1, C1, R2, C2 } = req.body;
 
-  // ✅ Modify Command to Log Any Octave Execution Issues
-  const command = `octave --silent --path /app --eval "try; disp('Checking file availability'); ls('/app/readonly/'); optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2}); catch err; disp('Error: Execution Failed'); disp(err.message); exit(1); end"`;
+  // 🔹 Improved Octave Command with Full Debugging
+  const command = `octave --silent --path /app/readonly --eval "
+    try;
+      disp('🔍 Checking file availability:');
+      ls('/app/readonly/');
+      
+      disp('✅ Running optimize_RC...');
+      if exist('optimize_RC', 'file') == 0
+        error('⚠️ Function optimize_RC.m not found in /app/readonly/');
+      end
 
-  exec(command, (error, stdout) => {
-    console.log("🔹 Octave Command Output:", stdout); // Debug Output in Logs
+      optimize_RC(${R0}, ${R1}, ${C1}, ${R2}, ${C2});
 
-    if (error) {
-      console.error("❌ Octave execution error:", error);
-      return res.status(500).json({ error: "Octave execution failed", details: error.message });
+    catch err;
+      disp('❌ Error: Execution Failed');
+      disp(err.message);
+      exit(1);
+    end"`;
+
+  // 🔹 Execute Octave Command
+  exec(command, (error, stdout, stderr) => {
+    console.log("🔹 Octave STDOUT:", stdout);
+    console.error("❌ Octave STDERR:", stderr);
+
+    if (error || stderr.includes("Error: Execution Failed")) {
+      return res.status(500).json({
+        error: "Octave execution failed",
+        details: stderr || error.message,
+        stdout: stdout,
+      });
     }
 
-    if (stdout.includes("Error: Execution Failed")) {
-      console.error("❌ Octave function did not execute properly.");
-      return res.status(500).json({ error: "Octave function did not execute properly", output: stdout });
-    }
-
+    // ✅ Extract & Parse Output
     const match = stdout.match(/R0: ([\d.]+), R1: ([\d.]+), C1: ([\d.]+), R2: ([\d.]+), C2: ([\d.]+)/);
     if (!match) {
       console.error("❌ Failed to parse Octave output.");
@@ -68,10 +97,11 @@ app.post("/api/optimize", (req, res) => {
   });
 });
 
-// ✅ Ensure the server is running on the correct PORT
+// ✅ Root Route for API Status
 const PORT = process.env.PORT || 10000;
 app.get("/", (req, res) => {
-  res.send("✅ Server is running! Use POST /api/optimize");
+  res.send("✅ Server is running! Use POST /api/optimize or GET /debug");
 });
 
+// ✅ Start the Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
