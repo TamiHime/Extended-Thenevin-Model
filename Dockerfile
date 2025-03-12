@@ -17,7 +17,7 @@ RUN mkdir -p /app/readonly/ && cp optimize_RC.m /app/readonly/
 RUN npm install
 
 # Expose the required port
-EXPOSE 10000
+EXPOSE 3001
 
 # Start the server
 CMD ["node", "server.js"]
