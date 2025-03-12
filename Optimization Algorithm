@@ -1,4 +1,4 @@
-% Load data
+% Load data from models
 load readonly/pulseData.mat;  % load data to use for this project
 load readonly/pulseModel.mat; % load SOC/OCV relationships, capacity
 
