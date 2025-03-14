@@ -6,34 +6,19 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
     disp(ls('readonly/')); % Lists files in readonly folder
 
     % 🔹 Load Data Files
-    disp("🔍 Loading pulseData.mat...");
-    
-    % Decide: Use pulseModel.m or pulseModel.mat?
-    if exist('pulseModel.m', 'file')
-        disp("✅ Using pulseModel.m");
-        model = pulseModel();
-    elseif exist('readonly/pulseModel.mat', 'file')
-        disp("✅ Using pulseModel.mat");
-        pulseModelVars = load('readonly/pulseModel.mat');
-        if isfield(pulseModelVars, 'model')
-            model = pulseModelVars.model;
-            disp("✅ Loaded 'model' from pulseModel.mat");
-        else
-            error("❌ 'model' is missing from pulseModel.mat!");
-        end
-    else
-        error("❌ No valid model source found!");
-    end
-
-    % 🔹 Set Constants
-    deltaT = 1;  
-    T = 25;  
+    disp("🔍 Loading pulseModel.m...");
+    model = pulseModel(); % ✅ Call function instead of loading .mat file
 
     % 🔹 Debug: Ensure model contains 'Q' before using getParamESC
     if ~isfield(model, 'Q')
-        error("❌ 'Q' field is missing from model! Check pulseModel.m or pulseModel.mat.");
+        error("❌ 'Q' field is missing from model! Check pulseModel.m.");
     end
-    
+
+    % Set Constants
+    deltaT = 1;  
+    T = 25;  
+
+    % ✅ Use model directly
     try
         Q = getParamESC('QParam', T, model);  
     catch err
