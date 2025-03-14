@@ -8,7 +8,7 @@ RUN apt update && apt install -y nodejs npm
 WORKDIR /app
 
 # Create necessary directories
-RUN mkdir -p /app/readonly/ /app/octave/
+RUN mkdir -p /app/octave/
 
 # Copy only package.json first to leverage Docker cache
 COPY package*.json /app/
@@ -22,11 +22,8 @@ COPY . /app
 # Copy Octave script files to the correct location
 COPY octave/*.m /app/octave/
 
-# Ensure readonly directory exists before copying
-RUN mkdir -p /app/readonly/
-
-# Conditionally copy .mat files (only if they exist)
-COPY readonly/ /app/readonly/
+# Copy ONLY pulseData.mat from the octave folder
+COPY octave/pulseData.mat /app/octave/pulseData.mat
 
 # Ensure Octave finds the necessary files by setting the path
 ENV OCTAVE_PATH "/app/octave"
