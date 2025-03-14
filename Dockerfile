@@ -22,11 +22,11 @@ COPY . /app
 # Copy Octave script files to the correct location
 COPY octave/*.m /app/octave/
 
-# Ensure readonly directory exists
+# Ensure readonly directory exists before copying
 RUN mkdir -p /app/readonly/
 
-# Copy .mat files only if they exist
-COPY readonly/*.mat /app/readonly/ 2>/dev/null || true
+# Conditionally copy .mat files (only if they exist)
+COPY readonly/ /app/readonly/
 
 # Ensure Octave finds the necessary files by setting the path
 ENV OCTAVE_PATH "/app/octave"
