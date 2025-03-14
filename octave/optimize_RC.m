@@ -9,7 +9,7 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
     addpath(genpath('octave')); % ✅ Ensure Octave finds pulseModel.m
     
     disp("🔍 Loading pulseModel.m...");
-    [model, getParamESC, OCVfromSOCtemp, simCell] = pulseModel(); % ✅ Call function instead of loading .mat file
+    model = pulseModel(); % ✅ Call function instead of loading .mat file
     
     % 🔹 Debug: Ensure model contains 'Q'
     if ~isfield(model, 'Q')
