@@ -7,7 +7,7 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
 
     % 🔹 Load Data Files
     disp("🔍 Loading pulseData.mat...");
-    pulseDataVars = load('readonly/pulseData.mat');
+    pulseDataVars = pulseModel();
 
     disp("🔍 Loading pulseModel.mat...");
     pulseModelVars = load('readonly/pulseModel.mat');
