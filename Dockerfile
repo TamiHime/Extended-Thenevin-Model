@@ -1,7 +1,7 @@
 # Use an official Octave image as the base
 FROM mtmiller/octave:latest
 
-# Install Node.js and dependencies (since Octave base image does not have it)
+# Install Node.js (since Octave base image does not have it)
 RUN apt update && apt install -y nodejs npm
 
 # Set working directory
@@ -19,9 +19,12 @@ RUN npm install
 # Copy the rest of the application files
 COPY . /app
 
-# Move Octave script files to the correct location
+# Copy Octave script files to the correct location
 COPY octave/*.m /app/octave/
-COPY readonly/*.mat /app/readonly/
+
+# Ensure readonly directory exists before copying
+RUN mkdir -p /app/readonly/
+COPY readonly/ /app/readonly/ || true
 
 # Ensure Octave finds the necessary files by setting the path
 ENV OCTAVE_PATH "/app/octave"
