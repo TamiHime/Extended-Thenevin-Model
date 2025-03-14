@@ -7,28 +7,33 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
 
     % 🔹 Load Data Files
     disp("🔍 Loading pulseData.mat...");
-    pulseDataVars = pulseModel();
-
-    disp("🔍 Loading pulseModel.mat...");
-    pulseModelVars = load('readonly/pulseModel.mat');
     
-    % 🔹 Debug: Check available variables in pulseModel.mat
-    disp("📂 Variables in pulseModel.mat:");
-    disp(fieldnames(pulseModelVars));
-
-    % 🔹 Ensure model exists in pulseModel.mat
-    if isfield(pulseModelVars, 'model')
-        model = pulseModelVars.model;
-        disp("✅ Loaded 'model' from pulseModel.mat");
+    % Decide: Use pulseModel.m or pulseModel.mat?
+    if exist('pulseModel.m', 'file')
+        disp("✅ Using pulseModel.m");
+        model = pulseModel();
+    elseif exist('readonly/pulseModel.mat', 'file')
+        disp("✅ Using pulseModel.mat");
+        pulseModelVars = load('readonly/pulseModel.mat');
+        if isfield(pulseModelVars, 'model')
+            model = pulseModelVars.model;
+            disp("✅ Loaded 'model' from pulseModel.mat");
+        else
+            error("❌ 'model' is missing from pulseModel.mat!");
+        end
     else
-        error("❌ 'model' is missing from pulseModel.mat!");
+        error("❌ No valid model source found!");
     end
 
     % 🔹 Set Constants
     deltaT = 1;  
     T = 25;  
 
-    % 🔹 Debug: Check if model works with getParamESC
+    % 🔹 Debug: Ensure model contains 'Q' before using getParamESC
+    if ~isfield(model, 'Q')
+        error("❌ 'Q' field is missing from model! Check pulseModel.m or pulseModel.mat.");
+    end
+    
     try
         Q = getParamESC('QParam', T, model);  
     catch err
@@ -38,9 +43,9 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
     end
 
     % Extract Data
-    tk = pulseDataVars.pulseData.time;    
-    ik = pulseDataVars.pulseData.current;  
-    vk = pulseDataVars.pulseData.voltage;  
+    tk = pulseData.time;    
+    ik = pulseData.current;  
+    vk = pulseData.voltage;  
 
     % Initialize parameters
     R = [R0_init, R1_init, R2_init] / 1000;
