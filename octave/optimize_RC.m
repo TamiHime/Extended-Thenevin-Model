@@ -5,11 +5,13 @@ function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
     disp("🔍 Available files in readonly:");
     disp(ls('readonly/')); % Lists files in readonly folder
 
-    % 🔹 Load Data Files
+    disp("🔍 Setting Octave path...");
+    addpath(genpath('octave')); % ✅ Ensure Octave finds pulseModel.m
+    
     disp("🔍 Loading pulseModel.m...");
     model = pulseModel(); % ✅ Call function instead of loading .mat file
-
-    % 🔹 Debug: Ensure model contains 'Q' before using getParamESC
+    
+    % 🔹 Debug: Ensure model contains 'Q'
     if ~isfield(model, 'Q')
         error("❌ 'Q' field is missing from model! Check pulseModel.m.");
     end
