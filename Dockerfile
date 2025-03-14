@@ -22,7 +22,7 @@ COPY . /app
 # Move Octave files to the correct location
 COPY octave/optimize_RC.m /app/readonly/optimize_RC.m
 COPY octave/pulseData.mat /app/readonly/pulseData.mat
-COPY octave/pulseModel.mat /app/readonly/pulseModel.mat
+COPY octave/pulseModel.m /app/readonly/pulseModel.m
 
 # Expose the correct port (10000)
 EXPOSE 10000
