@@ -26,6 +26,9 @@ COPY readonly/*.mat /app/readonly/
 # Ensure Octave finds the necessary files by setting the path
 ENV OCTAVE_PATH "/app/octave"
 
+# Install necessary packages for Octave plotting
+RUN apt install -y gnuplot-x11
+
 # Expose the correct port (10000)
 EXPOSE 10000
 
