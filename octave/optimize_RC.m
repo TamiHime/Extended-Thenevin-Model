@@ -1,88 +1,67 @@
 function optimize_RC(R0_init, R1_init, C1_init, R2_init, C2_init)
-    % 🔹 Debug: Print working directory & available files
-    disp("📂 Checking working directory...");
-    disp(pwd); % Prints the current directory
-    disp("🔍 Available files in readonly:");
-    disp(ls('readonly/')); % Lists files in readonly folder
+    % Load the pulse data
+    load('readonly/pulseData.mat'); % Ensure this file exists in the 'readonly' directory
 
-    disp("🔍 Setting Octave path...");
-    addpath(genpath('octave')); % ✅ Ensure Octave finds pulseModel.m
-    
-    disp("🔍 Loading pulseModel.m...");
-    model = pulseModel(); % ✅ Call function instead of loading .mat file
-    
-    % 🔹 Debug: Ensure model contains 'Q'
-    if ~isfield(model, 'Q')
-        error("❌ 'Q' field is missing from model! Check pulseModel.m.");
-    end
+    % Load the battery model
+    model = pulseModel();
 
-    % Set Constants
-    deltaT = 1;  
-    T = 25;  
+    % Extract data from pulseData
+    time = pulseData.time;
+    current = pulseData.current;
+    voltage = pulseData.voltage;
 
-    % ✅ Use model directly
-    try
-        Q = getParamESC('QParam', T, model);  
-    catch err
-        disp("❌ Error in getParamESC:");
-        disp(err.message);
-        error("⚠️ 'model' is incorrectly defined or missing required fields.");
-    end
+    % Set initial parameter values
+    initialParams = [R0_init, R1_init, C1_init, R2_init, C2_init];
 
-    % Extract Data
-    tk = pulseData.time;    
-    ik = pulseData.current;  
-    vk = pulseData.voltage;  
+    % Define optimization options
+    options = optimset('Display', 'iter', 'TolFun', 1e-6, 'TolX', 1e-6);
 
-    % Initialize parameters
-    R = [R0_init, R1_init, R2_init] / 1000;
-    C = [C1_init, C2_init] * 1000;
+    % Define the objective function for optimization
+    objectiveFunction = @(params) objective_RC(params, time, current, voltage, model);
 
-    % Optimization (Gradient Descent)
-    alpha = 0.005;
-    max_iter = 500;
-    tolerance = 1e-5;
-    prev_error = Inf;
+    % Perform the optimization
+    [optimizedParams, errorValue] = fminsearch(objectiveFunction, initialParams, options);
 
-    for iter = 1:max_iter
-        vest = rc_model_function([R(1)*1000, R(2)*1000, C(1)/1000, R(3)*1000, C(2)/1000], ik, vk, deltaT, Q, model);
-        error = sum((vk - vest).^2);
+    % Print the optimized parameters
+    fprintf('Optimized Parameters:\n');
+    fprintf('R0: %.6f\n', optimizedParams(1));
+    fprintf('R1: %.6f\n', optimizedParams(2));
+    fprintf('C1: %.6f\n', optimizedParams(3));
+    fprintf('R2: %.6f\n', optimizedParams(4));
+    fprintf('C2: %.6f\n', optimizedParams(5));
+    fprintf('Final Error Value: %.6f\n', errorValue);
 
-        grad_R = zeros(size(R));
-        grad_C = zeros(size(C));
+    % Write output to a JSON file for TypeScript to process
+    outputFile = fopen('readonly/optimized_params.json', 'w');
+    fprintf(outputFile, '{"R0": %.6f, "R1": %.6f, "C1": %.6f, "R2": %.6f, "C2": %.6f, "error": %.6f}', ...
+        optimizedParams(1), optimizedParams(2), optimizedParams(3), optimizedParams(4), optimizedParams(5), errorValue);
+    fclose(outputFile);
+end
 
-        for i = 1:length(R)
-            R_temp = R;
-            R_temp(i) = R_temp(i) + 1e-6;
-            vest_temp = rc_model_function([R_temp(1)*1000, R_temp(2)*1000, C(1)/1000, R_temp(3)*1000, C(2)/1000], ik, vk, deltaT, Q, model);
-            grad_R(i) = (sum((vk - vest_temp).^2) - error) / 1e-6;
-        end
-        
-        for i = 1:length(C)
-            C_temp = C;
-            C_temp(i) = C_temp(i) + 1e-6;
-            vest_temp = rc_model_function([R(1)*1000, R(2)*1000, C_temp(1)/1000, R(3)*1000, C_temp(2)/1000], ik, vk, deltaT, Q, model);
-            grad_C(i) = (sum((vk - vest_temp).^2) - error) / 1e-6;
-        end
+function error = objective_RC(params, time, current, voltage, model)
+    % Unpack parameters
+    R0 = params(1);
+    R1 = params(2);
+    C1 = params(3);
+    R2 = params(4);
+    C2 = params(5);
 
-        R = R - alpha * grad_R;
-        C = C - alpha * grad_C;
+    % Update model parameters
+    model.R0 = R0;
+    model.R1 = R1;
+    model.C1 = C1;
+    model.R2 = R2;
+    model.C2 = C2;
 
-        R = max(min(R, [0.1, 0.1, 0.1]), [0.001, 0.001, 0.001]);
-        C = max(min(C, [1, 1]), [0.001, 0.001]);
+    % Simulate the cell voltage using the updated parameters
+    deltaT = time(2) - time(1); % Assuming uniform time steps
+    T = 25; % Assuming a constant temperature of 25°C
+    z0 = 0.5; % Initial state of charge (50%)
+    iR0 = 0; % Initial resistor currents
+    h0 = 0; % Initial hysteresis state
 
-        if abs(prev_error - error) < tolerance
-            break;
-        end
+    [simulatedVoltage, ~, ~, ~, ~, ~] = simCell(current, T, deltaT, model, z0, iR0, h0);
 
-        prev_error = error;
-    end
-
-    % Optimize Outputs
-    R_opt = round(R * 1000, 3, "significant");
-    C_opt = round(C / 1000, 3, "significant");
-
-    % ✅ Print final results
-    printf("✅ Optimization Complete!\n");
-    printf("R0: %.3f, R1: %.3f, C1: %.3f, R2: %.3f, C2: %.3f\n", R_opt(1), R_opt(2), C_opt(1), R_opt(3), C_opt(2));
+    % Calculate the error between the simulated and measured voltage
+    error = sum((voltage - simulatedVoltage).^2);
 end
