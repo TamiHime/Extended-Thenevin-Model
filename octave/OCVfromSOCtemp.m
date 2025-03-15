@@ -5,13 +5,14 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     SOC = model.SOC(:);
     soccol = soc(:); % Ensure SOC input is a column vector
 
-    % 🔹 Debug: Display OCV0 and SOC lengths
+    % 🔹 Debug: Display lengths
     disp(["🔍 Length of OCV0:", num2str(length(OCV0))]);
     disp(["🔍 Length of SOC:", num2str(length(SOC))]);
+    disp(["🔍 Length of OCVrel:", num2str(length(OCVrel))]);
 
-    % ✅ Ensure SOC and OCV0 have the same length
-    if length(OCV0) ~= length(SOC)
-        error("❌ Mismatch: OCV0 and SOC must have the same number of elements.");
+    % ✅ Ensure all lookup tables have the same length
+    if length(OCV0) ~= length(SOC) || length(OCVrel) ~= length(SOC)
+        error("❌ Mismatch: OCV0, OCVrel, and SOC must have the same number of elements.");
     end
 
     % ✅ Ensure SOC lookup does not exceed bounds
@@ -55,12 +56,18 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I45 = I4 - I5;
         omI45 = 1 - I45;
 
-        % Ensure indices are within valid bounds
+        % Ensure I5 does not exceed bounds
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
         ocv(I3) = OCV0(I5) .* omI45 + OCV0(I5+1) .* I45;
-        ocv(I3) = ocv(I3) + Tcol(I3) .* (OCVrel(I5) .* omI45 + OCVrel(I5+1) .* I45);
+
+        % ✅ Prevent OCVrel index from exceeding bounds
+        if length(OCVrel) == length(OCV0)
+            ocv(I3) = ocv(I3) + Tcol(I3) .* (OCVrel(I5) .* omI45 + OCVrel(I5+1) .* I45);
+        else
+            error("❌ Length of OCVrel does not match OCV0. Check pulseModel.m!");
+        end
     end
 
     % Ensure correct output shape
