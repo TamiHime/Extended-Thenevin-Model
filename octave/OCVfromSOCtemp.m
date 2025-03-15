@@ -26,6 +26,11 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         Tcol = temp(:); % Convert to column vector
     end
 
+    % ✅ Ensure Tcol is a column vector with the same size as soccol
+    if size(Tcol, 1) ~= size(soccol, 1)
+        Tcol = reshape(Tcol, size(soccol));
+    end
+
     % Initialize output
     ocv = zeros(size(soccol));
 
@@ -39,14 +44,14 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     if ~isempty(I1)
         dvdz = (OCV0(2) - OCV0(1)) / diffSOC;
         ocv(I1) = (soccol(I1) - SOC(1)) .* dvdz + OCV0(1);
-        ocv(I1) = ocv(I1) + Tcol(I1) .* OCVrel(1);
+        ocv(I1) = ocv(I1) + Tcol(I1) .* OCVrel(1); % Ensure correct dimensions
     end
 
     % ✅ Extrapolate above table range
     if ~isempty(I2)
         dvdz = (OCV0(end) - OCV0(end-1)) / diffSOC;
         ocv(I2) = (soccol(I2) - SOC(end)) .* dvdz + OCV0(end);
-        ocv(I2) = ocv(I2) + Tcol(I2) .* OCVrel(end);
+        ocv(I2) = ocv(I2) + Tcol(I2) .* OCVrel(end); % Ensure correct dimensions
     end
 
     % ✅ Interpolation within range
@@ -62,7 +67,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
 
         ocv(I3) = OCV0(I5) .* omI45 + OCV0(I5+1) .* I45;
 
-        % ✅ Prevent OCVrel index from exceeding bounds
+        % ✅ Ensure correct dimensions for OCVrel calculations
         if length(OCVrel) == length(OCV0)
             ocv(I3) = ocv(I3) + Tcol(I3) .* (OCVrel(I5) .* omI45 + OCVrel(I5+1) .* I45);
         else
