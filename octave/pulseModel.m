@@ -8,9 +8,9 @@ function [model, getParamESC, OCVfromSOCtemp, simCell] = pulseModel()
     model.Q = 3600;
 
     % Open Circuit Voltage (OCV) parameters
-    model.OCV0 = [3.0, 0.5, -0.2, 0.1];
+    model.OCV0 = linspace(3.0, 4.2, 100);  % Ensure this length matches SOC
+    model.SOC = linspace(0, 1, 100);  % Ensure the lookup table is correct
     model.OCVrel = [0.1, -0.05, 0.02, 0.01];
-    model.SOC = linspace(0, 1, 100);
     
     % Temperature-dependent parameters
     model.temps = [-10, 0, 25, 45];
