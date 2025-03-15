@@ -21,4 +21,13 @@ function [vk, rck, hk, zk, sik, OCV] = simCell(ik, T, deltaT, model, z0, iR0, h0
     fac = exp(-abs(G * etaik * deltaT / (3600 * Q)));
 
     for k = 2:length(ik)
-        rck(:,k) = diag(RCfact) * rck(:,k-1) + (1 - RC
+        rck(:,k) = diag(RCfact) * rck(:,k-1) + (1 - RCfact) * etaik(k-1);
+        hk(k) = fac(k-1) * hk(k-1) - (1 - fac(k-1)) * sign(ik(k-1));
+        sik(k) = sign(ik(k));
+        if abs(ik(k)) < Q / 100, sik(k) = sik(k-1); end
+    end
+    rck = rck';
+
+    OCV = OCVfromSOCtemp(zk, T, model);
+    vk = OCV + M * hk + M0 * sik - rck * RParam' - ik .* R0Param;
+end
