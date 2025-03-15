@@ -1,4 +1,16 @@
 function ocv = OCVfromSOCtemp(soc, temp, model)
+    OCV0 = model.OCV0(:);
+    SOC = model.SOC(:);
+    
+    % Debug: Display OCV0 length
+    disp(["🔍 Length of OCV0:", num2str(length(OCV0))]);
+    disp(["🔍 Length of SOC:", num2str(length(SOC))]);
+
+    % Ensure SOC lookup does not exceed bounds
+    if max(soc) > max(SOC)
+        error("❌ SOC value exceeds OCV lookup table bounds!");
+    end
+    
     % Extract OCV tables
     OCV0 = model.OCV0(:);
     OCVrel = model.OCVrel(:);
