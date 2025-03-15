@@ -61,15 +61,19 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I45 = I4 - I5;
         omI45 = 1 - I45;
 
-        % Ensure I5 does not exceed bounds
+        % ✅ Ensure I5 does not exceed bounds
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
+        % ✅ Ensure OCV0 and OCVrel are correctly indexed
         ocv(I3) = OCV0(I5) .* omI45 + OCV0(I5+1) .* I45;
 
-        % ✅ Ensure correct dimensions for OCVrel calculations
+        % ✅ Prevent OCVrel index from exceeding bounds
         if length(OCVrel) == length(OCV0)
-            ocv(I3) = ocv(I3) + Tcol(I3) .* (OCVrel(I5) .* omI45 + OCVrel(I5+1) .* I45);
+            % 🚀 Ensure all terms have matching dimensions
+            OCVrel_corrected = OCVrel(I5) .* omI45 + OCVrel(I5+1) .* I45;
+            OCVrel_corrected = reshape(OCVrel_corrected, size(Tcol(I3))); % Ensure matching shape
+            ocv(I3) = ocv(I3) + Tcol(I3) .* OCVrel_corrected;
         else
             error("❌ Length of OCVrel does not match OCV0. Check pulseModel.m!");
         end
