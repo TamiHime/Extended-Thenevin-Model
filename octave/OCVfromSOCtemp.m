@@ -78,7 +78,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         end
 
         % Final interpolation equation
-        ocv(I3) = ocv_corrected + (Tcol(I3) .* OCVrel_corrected);
+        ocv(I3) = ocv_corrected + (reshape(Tcol(I3), [], 1) .* reshape(OCVrel_corrected, [], 1));
     end
 
     % Ensure correct output shape
