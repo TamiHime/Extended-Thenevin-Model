@@ -63,6 +63,13 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
+        disp("🔹 Debugging Before Reshape 🔹");
+        disp(["🔹 Size of ocv(I3): ", num2str(size(ocv(I3)))]);
+        disp(["🔹 Size of OCV0(I5): ", num2str(size(OCV0_I5))]);
+        disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
+        disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
+        disp(["🔹 Size of OCVrel_corrected: ", num2str(size(OCVrel_corrected))]);
+
         % ✅ Ensure correct indexing of OCV0 and OCVrel
         OCV0_I5 = OCV0(I5)';
         OCV0_I5p1 = OCV0(I5+1)';
@@ -77,7 +84,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
 
         % 🚀 Ensure all terms have matching dimensions
-        OCVrel_corrected = OCVrel_I5 .* omI45 + OCVrel_I5p1 .* I45;
+        OCVrel_corrected = sum(OCVrel_I5 .* omI45 + OCVrel_I5p1 .* I45, 2);
         OCVrel_corrected = reshape(OCVrel_corrected, size(Tcol(I3))); % Ensure matching shape
 
         % ✅ Ensure `ocv(I3)` is correctly assigned
