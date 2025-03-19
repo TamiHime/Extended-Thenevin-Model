@@ -49,17 +49,21 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
-        % ✅ Correct indexing of OCV0 and OCVrel
-        OCV0_I5 = OCV0(I5);
-        OCV0_I5p1 = OCV0(I5+1);
+        % ✅ Fix Indexing Issue by Forcing Column Vectors
+        OCV0_I5 = OCV0(I5(:));  % Ensure it returns a column vector
+        OCV0_I5p1 = OCV0(I5(:) + 1); 
 
-        OCVrel_I5 = OCVrel(I5);
-        OCVrel_I5p1 = OCVrel(I5+1);
+        OCVrel_I5 = OCVrel(I5(:));  
+        OCVrel_I5p1 = OCVrel(I5(:) + 1); 
 
-        % 🚀 Fix shape mismatch by ensuring correct broadcasting
+        % ✅ Debugging - Display variable sizes
+        disp(["🔹 Size of ocv(I3): ", num2str(size(ocv(I3)))]);
+        disp(["🔹 Size of OCV0(I5): ", num2str(size(OCV0_I5))]);
+        disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
+        disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
+
+        % 🚀 Ensure all terms have matching dimensions
         OCVrel_corrected = (OCVrel_I5 .* omI45) + (OCVrel_I5p1 .* I45);
-        
-        % ✅ Ensure ocv_corrected matches shape expectations
         ocv_corrected = (OCV0_I5 .* omI45) + (OCV0_I5p1 .* I45);
 
         % ✅ Only reshape if needed
