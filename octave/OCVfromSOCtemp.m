@@ -94,6 +94,23 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
 
         % 🔥 Final Fix: Explicitly reshape `ocv(I3)` before assignment
         ocv(I3) = reshape(ocv(I3), [], 1);
+
+        % 🚨 DEBUGGING: Print actual values involved in the computation 🚨
+        disp("🔎 DEBUG: Values Before Multiplication:");
+        disp(["👉 ocv_corrected: ", num2str(ocv_corrected')]); % Transpose to show as row
+        disp(["👉 Tcol(I3): ", num2str(Tcol(I3)')]);
+        disp(["👉 OCVrel_corrected: ", num2str(OCVrel_corrected')]);
+        
+        % 🚨 DEBUGGING: Print exact matrix dimensions involved in the operation
+        disp(["✅ Size of ocv_corrected: ", num2str(size(ocv_corrected))]);
+        disp(["✅ Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
+        disp(["✅ Size of OCVrel_corrected: ", num2str(size(OCVrel_corrected))]);
+        
+        % 🚨 DEBUGGING: Print if they have mismatched shapes
+        if size(Tcol(I3), 2) ~= size(OCVrel_corrected, 2)
+            disp("❌ ERROR: Shape mismatch before multiplication!");
+            error("Shape mismatch detected before final multiplication.");
+        end
         ocv(I3) = reshape(ocv_corrected, [], 1) + bsxfun(@times, reshape(Tcol(I3), [], 1), reshape(OCVrel_corrected, [], 1));
     end
 
