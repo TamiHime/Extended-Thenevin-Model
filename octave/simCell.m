@@ -28,6 +28,6 @@ function [vk, rck, hk, zk, sik, OCV] = simCell(ik, T, deltaT, model, z0, iR0, h0
     end
     rck = rck';
 
-    OCV = OCVfromSOCtemp(zk, T, model);
+    OCV = OCVfromSOCtemp(zk, T * ones(size(zk)), model);
     vk = OCV + M * hk + M0 * sik - rck * RParam' - ik .* R0Param;
 end
