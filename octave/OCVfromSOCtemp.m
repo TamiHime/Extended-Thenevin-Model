@@ -111,7 +111,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
             disp("❌ ERROR: Shape mismatch before multiplication!");
             error("Shape mismatch detected before final multiplication.");
         end
-        ocv(I3) = reshape(ocv_corrected, [], 1) + bsxfun(@times, reshape(Tcol(I3), [], 1), reshape(OCVrel_corrected, [], 1));
+        ocv(I3) = reshape(ocv_corrected, [], 1) + reshape(Tcol(I3), [], 1) .* reshape(OCVrel_corrected, [], 1);
     end
 
     % Ensure correct output shape
