@@ -93,9 +93,8 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         OCVrel_corrected = reshape(OCVrel_corrected, [], 1);
         Tcol_I3_reshaped = reshape(Tcol(I3), [], 1);
 
-        % 🔥 Final Fix: Explicitly reshape ocv(I3) before assignment
-        ocv(I3) = reshape(ocv(I3), [], 1); % 🔥 Ensures it's a column vector
-        ocv(I3) = ocv_corrected + (Tcol_I3_reshaped .* OCVrel_corrected);
+        % 🔥 Final Fix: Use `bsxfun` to Ensure Safe Element-wise Multiplication
+        ocv(I3) = ocv_corrected + bsxfun(@times, Tcol(I3), OCVrel_corrected);
     end
 
     % Ensure correct output shape
