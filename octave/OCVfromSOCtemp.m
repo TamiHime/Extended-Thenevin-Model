@@ -62,18 +62,15 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
         disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
 
-        % 🚀 Fix the nonconformant argument issue by forcing proper dimensions
-        if size(OCV0_I5, 2) ~= size(omI45, 1)
-            omI45 = omI45';
-        end
-        if size(OCV0_I5p1, 2) ~= size(I45, 1)
-            I45 = I45';
-        end
+        % 🚀 Fix the 6x6 Issue: Ensure omI45 and I45 are Column Vectors
+        omI45 = omI45(:);  % Ensure omI45 is a column vector
+        I45 = I45(:);      % Ensure I45 is a column vector
 
+        % ✅ Fix the multiplication issue
         OCVrel_corrected = (OCVrel_I5 .* omI45) + (OCVrel_I5p1 .* I45);
         ocv_corrected = (OCV0_I5 .* omI45) + (OCV0_I5p1 .* I45);
 
-        % ✅ Ensure matching shapes
+        % ✅ Ensure matching shapes before assignment
         if size(ocv_corrected) ~= size(Tcol(I3))
             ocv_corrected = reshape(ocv_corrected, size(Tcol(I3)));
         end
