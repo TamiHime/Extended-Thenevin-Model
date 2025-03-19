@@ -93,16 +93,8 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         OCVrel_corrected = reshape(OCVrel_corrected, [], 1);
         Tcol_I3_reshaped = reshape(Tcol(I3), [], 1);
 
-        % ✅ 🔥 Final Check Before Multiplication 🔥
-        if size(Tcol_I3_reshaped, 2) ~= size(OCVrel_corrected, 2)
-            disp("❌ ERROR: Shape mismatch before final multiplication!");
-            disp(["Size of Tcol_I3_reshaped: ", num2str(size(Tcol_I3_reshaped))]);
-            disp(["Size of OCVrel_corrected: ", num2str(size(OCVrel_corrected))]);
-            error("❌ Shape mismatch detected before final multiplication.");
-        end
-
-        % ✅ Fix the multiplication issue by forcing column vectors
-        ocv(I3) = ocv_corrected + (Tcol_I3_reshaped .* OCVrel_corrected);
+        % ✅ 🔥 Final Fix 🔥 Ensure ocv(I3) is also a column vector
+        ocv(I3) = reshape(ocv_corrected, [], 1) + (reshape(Tcol(I3), [], 1) .* reshape(OCVrel_corrected, [], 1));
     end
 
     % Ensure correct output shape
