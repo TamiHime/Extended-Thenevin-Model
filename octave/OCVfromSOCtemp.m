@@ -20,20 +20,13 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     soccol(soccol > SOC(end)) = SOC(end);
 
     % Handle temperature input
-    Tcol = temp(:);
+    Tcol = temp(:); % Ensure temp is a column vector
     if size(Tcol, 1) ~= size(soccol, 1)
         error("❌ Mismatch: Temperature vector Tcol size does not match SOC vector.");
     end
 
-    
-    if isscalar(temp)
-        Tcol = temp * ones(size(soccol)); % Apply scalar temperature
-    else
-        Tcol = temp(:); % Convert to column vector
-    end
-
     % Debugging: Ensure Tcol is correct
-    disp(["🔹 Size of Tcol before reshape: ", num2str(size(Tcol))]);
+    disp(["🔹 Size of Tcol: ", num2str(size(Tcol))]);
 
     % Ensure Tcol matches soccol size
     Tcol = reshape(Tcol, size(soccol));
@@ -43,7 +36,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
 
     % Fix potential scalar vs. vector issue
     SOC_1 = SOC(1); % Ensures it is a scalar (1x1)
-    diffSOC = SOC(2) - SOC_1; % Ensures scalar difference
+    diffSOC = (SOC(2) - SOC_1) * ones(size(soccol)); % Ensures it is Nx1
 
     % Find SOC out-of-range indices
     I1 = find(soccol <= SOC_1); % Below table range
