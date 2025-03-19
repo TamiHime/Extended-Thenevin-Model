@@ -63,18 +63,11 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
-        disp("🔹 Debugging Before Reshape 🔹");
-        disp(["🔹 Size of ocv(I3): ", num2str(size(ocv(I3)))]);
-        disp(["🔹 Size of OCV0(I5): ", num2str(size(OCV0_I5))]);
-        disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
-        disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
-        disp(["🔹 Size of OCVrel_corrected: ", num2str(size(OCVrel_corrected))]);
-
         % ✅ Ensure correct indexing of OCV0 and OCVrel
-        OCV0_I5 = OCV0(I5)';
+        OCV0_I5 = OCV0(I5)';  % Transpose to column vector
         OCV0_I5p1 = OCV0(I5+1)';
 
-        OCVrel_I5 = OCVrel(I5)';
+        OCVrel_I5 = OCVrel(I5)';  % Transpose to column vector
         OCVrel_I5p1 = OCVrel(I5+1)';
 
         % ✅ Debugging - Display variable sizes
@@ -83,13 +76,14 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
         disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
 
-        % 🚀 Ensure all terms have matching dimensions
+        % 🚀 Fix the reshape issue
+        % Use element-wise sum if necessary to avoid incorrect broadcasting
         OCVrel_corrected = sum(OCVrel_I5 .* omI45 + OCVrel_I5p1 .* I45, 2);
-        OCVrel_corrected = reshape(OCVrel_corrected, size(Tcol(I3))); % Ensure matching shape
+        OCVrel_corrected = reshape(OCVrel_corrected, [], 1); % Force column vector
 
         % ✅ Ensure `ocv(I3)` is correctly assigned
         ocv_corrected = OCV0_I5 .* omI45 + OCV0_I5p1 .* I45;
-        ocv_corrected = reshape(ocv_corrected, size(Tcol(I3)));
+        ocv_corrected = reshape(ocv_corrected, [], 1); % Force column vector
 
         ocv(I3) = ocv_corrected + Tcol(I3) .* OCVrel_corrected;
     end
