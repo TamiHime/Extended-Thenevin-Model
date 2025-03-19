@@ -5,7 +5,7 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     SOC = model.SOC(:);
     soccol = soc(:); % Ensure SOC input is a column vector
 
-    % 🔹 Debug: Display lengths
+    % 🔹 Debugging: Print sizes
     disp(["🔍 Length of OCV0:", num2str(length(OCV0))]);
     disp(["🔍 Length of SOC:", num2str(length(SOC))]);
     disp(["🔍 Length of OCVrel:", num2str(length(OCVrel))]);
@@ -26,6 +26,9 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         Tcol = temp(:); % Convert to column vector
     end
 
+    % ✅ Debugging: Ensure Tcol is correct
+    disp(["🔹 Size of Tcol before reshape: ", num2str(size(Tcol))]);
+
     % ✅ Ensure Tcol matches soccol size
     Tcol = reshape(Tcol, size(soccol));
 
@@ -41,6 +44,9 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     I2 = find(soccol >= SOC(end)); % Above table range
     I3 = find(soccol > SOC_1 & soccol < SOC(end)); % Inside table range
 
+    % ✅ Debugging: Print I3 size
+    disp(["🔹 Size of I3: ", num2str(size(I3))]);
+
     % ✅ Interpolation within range
     if ~isempty(I3)
         % ✅ Ensure I4 is a column vector
@@ -54,6 +60,9 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         % ✅ Fix: Ensure I5 does not exceed bounds
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0) - 1) = length(OCV0) - 1;  % Prevent overflow
+
+        % ✅ Debugging: Print I5 size
+        disp(["🔹 Size of I5: ", num2str(size(I5))]);
 
         % ✅ Ensure correct indexing of OCV0 and OCVrel
         OCV0_I5 = OCV0(I5);
@@ -83,6 +92,14 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         ocv_corrected = reshape(ocv_corrected, [], 1);
         OCVrel_corrected = reshape(OCVrel_corrected, [], 1);
         Tcol_I3_reshaped = reshape(Tcol(I3), [], 1);
+
+        % ✅ 🔥 Final Check Before Multiplication 🔥
+        if size(Tcol_I3_reshaped, 2) ~= size(OCVrel_corrected, 2)
+            disp("❌ ERROR: Shape mismatch before final multiplication!");
+            disp(["Size of Tcol_I3_reshaped: ", num2str(size(Tcol_I3_reshaped))]);
+            disp(["Size of OCVrel_corrected: ", num2str(size(OCVrel_corrected))]);
+            error("❌ Shape mismatch detected before final multiplication.");
+        end
 
         % ✅ Fix the multiplication issue by forcing column vectors
         ocv(I3) = ocv_corrected + (Tcol_I3_reshaped .* OCVrel_corrected);
