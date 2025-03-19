@@ -49,12 +49,12 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         I5(I5 < 1) = 1;
         I5(I5 >= length(OCV0)) = length(OCV0) - 1;
 
-        % ✅ Fix Indexing Issue by Forcing Column Vectors
-        OCV0_I5 = OCV0(I5(:));  % Ensure it returns a column vector
-        OCV0_I5p1 = OCV0(I5(:) + 1); 
+        % ✅ Ensure correct indexing of OCV0 and OCVrel
+        OCV0_I5 = OCV0(I5);
+        OCV0_I5p1 = OCV0(I5+1);
 
-        OCVrel_I5 = OCVrel(I5(:));  
-        OCVrel_I5p1 = OCVrel(I5(:) + 1); 
+        OCVrel_I5 = OCVrel(I5);
+        OCVrel_I5p1 = OCVrel(I5+1);
 
         % ✅ Debugging - Display variable sizes
         disp(["🔹 Size of ocv(I3): ", num2str(size(ocv(I3)))]);
@@ -62,11 +62,18 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
         disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))]);
         disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
 
-        % 🚀 Ensure all terms have matching dimensions
+        % 🚀 Fix the nonconformant argument issue by forcing proper dimensions
+        if size(OCV0_I5, 2) ~= size(omI45, 1)
+            omI45 = omI45';
+        end
+        if size(OCV0_I5p1, 2) ~= size(I45, 1)
+            I45 = I45';
+        end
+
         OCVrel_corrected = (OCVrel_I5 .* omI45) + (OCVrel_I5p1 .* I45);
         ocv_corrected = (OCV0_I5 .* omI45) + (OCV0_I5p1 .* I45);
 
-        % ✅ Only reshape if needed
+        % ✅ Ensure matching shapes
         if size(ocv_corrected) ~= size(Tcol(I3))
             ocv_corrected = reshape(ocv_corrected, size(Tcol(I3)));
         end
