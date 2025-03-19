@@ -72,9 +72,9 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
 
         % ✅ Debugging - Display variable sizes
         disp(["🔹 Size of ocv(I3): ", num2str(size(ocv(I3)))]);
-        disp(["🔹 Size of OCV0(I5): ", num2str(size(OCV0_I5)))]);
-        disp(["🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5)))]);
-        disp(["🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))]);
+        disp(strcat("🔹 Size of OCV0(I5): ", num2str(size(OCV0_I5))));  % ✅ Corrected
+        disp(strcat("🔹 Size of OCVrel(I5): ", num2str(size(OCVrel_I5))));  % ✅ Corrected
+        disp(strcat("🔹 Size of Tcol(I3): ", num2str(size(Tcol(I3)))));  % ✅ Corrected
         
         % 🚀 Ensure all terms have matching dimensions
         OCVrel_corrected = OCVrel_I5 .* omI45 + OCVrel_I5p1 .* I45;
