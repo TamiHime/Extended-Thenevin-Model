@@ -20,6 +20,12 @@ function ocv = OCVfromSOCtemp(soc, temp, model)
     soccol(soccol > SOC(end)) = SOC(end);
 
     % Handle temperature input
+    Tcol = temp(:);
+    if size(Tcol, 1) ~= size(soccol, 1)
+        error("❌ Mismatch: Temperature vector Tcol size does not match SOC vector.");
+    end
+
+    
     if isscalar(temp)
         Tcol = temp * ones(size(soccol)); % Apply scalar temperature
     else
